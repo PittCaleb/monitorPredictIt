@@ -12,6 +12,7 @@ class PredictIt:
         self.flag_range = None
         self.flagged_only = False
         self.flag = '*****'
+        self.show_url = False
 
     def get(self, endpoint):
         url = f'{self.base_url}/{endpoint}'
@@ -27,7 +28,8 @@ class PredictIt:
     def display(self, markets):
         for market in markets:
             if market['status'] == 'Open':
-                header = f"{market['shortName']:64} ({market['id']}) {market['timeStamp']}\n{' ':6}{market['url']}"
+                url = f"\n{' ':6}{market['url']}" if self.show_url else ''
+                header = f"{market['shortName']:70} ({market['id']}){url}"
                 header_printed = False
                 if not self.flagged_only:
                     print(header)
@@ -47,17 +49,19 @@ class PredictIt:
     def show_all_markets(self):
         all_markets = pi.get(pi.all_endpoint)
         pi.display(all_markets['markets'])
+        print('\nAll data sourced from http://www.PredictIt.org/ and is for non-commercial use.')
 
     def print_help(self):
-        print('main.py -h --low=[price] --high=[price]')
+        print('main.py -h --low=[price] --high=[price] --u,url')
         print('    -h help')
         print('    --low=[price] where price in range of 0.00 - 1.00 (optional)')
         print('    --high=[price] where price in range of 0.00 - 1.00 (optional)')
         print('    -f --flagged  Only show flagged rows')
+        print('    -u, --url Show market URL')
 
     def get_params(self, argv):
         try:
-            opts, args = getopt.getopt(argv, 'hf', ['low=', 'high=', 'flagged'])
+            opts, args = getopt.getopt(argv, 'hfu', ['low=', 'high=', 'flagged', 'url', 'urls'])
         except getopt.GetoptError:
             self.print_help()
             sys.exit(2)
@@ -87,6 +91,8 @@ class PredictIt:
                     sys.exit(2)
             elif opt in ('-f', '--flagged'):
                 self.flagged_only = True
+            elif opt in ('-u', '--url', '--urls'):
+                self.show_url = True
 
         if flag_low or flag_high:
             if (flag_low and not flag_high) or (flag_high and not flag_low):
