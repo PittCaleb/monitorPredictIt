@@ -3,9 +3,16 @@ Monitor the Predict It political wagering markets
 
 ## Usage
 ```bash
-python main.py
-python main.py --low .75 --high .85 --flagged
-python main.py --low .8 --high .9 --url
+python predictit.py
+
+python predictit.py --low .75 --high .85
+python predictit.py --low .75 --high .85 --flagged
+
+python predictit.py --keyword=pence
+python predictit.py --keyword=pence --low=.6 --high=.8
+
+python predictit.py --low .8 --high .9 --url
+
 ```
 
 ## Requirements
@@ -14,14 +21,26 @@ You may need to install the following packages to your virtual environment:
 
 ## Description
 Pulls live market data from PredictIt.org
+
 Will optionally flag contracts with prices within your range (low, high)
+
 Will optionally only output markets and contracts within your range
+
+Will optionally only output markets with contracts with your search term
+
+Will optionally only output markets with contracts with your search term and requested range
+
+Will optionally output the PredictIt.org URL for the shown market
 
 ## ToDo List
 * ~~--urls - make display of URLS off by default, flag to turn on~~
+* ~~Keyword searching for contracts~~
+  * ~~Combined with range searching~~
+* Keyword searching for markets
+  * Combined with range searching
 * Monitor specific market/contracts over time
-  * alert for price change
-  * integrate with SMS capabilities 
+  * Alert for price change
+  * Integrate with SMS capabilities 
 * Better user interface, i.e. non-command-line, potentially interactive
 
 ## Notes

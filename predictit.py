@@ -13,6 +13,7 @@ class PredictIt:
         self.flagged_only = False
         self.flag = '*****'
         self.show_url = False
+        self.keyword = None
 
     def get(self, endpoint):
         url = f'{self.base_url}/{endpoint}'
@@ -23,22 +24,29 @@ class PredictIt:
         return None
 
     def in_range(self, yes_price, no_price):
-        return True if self.flag_range and yes_price in self.flag_range or no_price in self.flag_range else False
+        return True if (self.flag_range is None or (self.flag_range is not None and (
+                (self.flag_range[0] <= yes_price <= self.flag_range[1]) or (
+                self.flag_range[0] <= no_price <= self.flag_range[1])))) else False
+
+    def in_search(self, phrase):
+        return True if self.keyword is None or (self.keyword and self.keyword in phrase.lower()) else False
 
     def display(self, markets):
         for market in markets:
             if market['status'] == 'Open':
                 url = f"\n{' ':6}{market['url']}" if self.show_url else ''
                 header = f"{market['shortName']:70} ({market['id']}){url}"
+
                 header_printed = False
-                if not self.flagged_only:
+                if not self.flagged_only and self.keyword is None:
                     print(header)
 
                 for contract in market['contracts']:
                     if contract['status'] == 'Open':
                         yes_price = contract['bestBuyYesCost'] if contract['bestBuyYesCost'] else float(0)
                         no_price = contract['bestBuyNoCost'] if contract['bestBuyNoCost'] else float(0)
-                        if not self.flagged_only or self.in_range(yes_price, no_price):
+                        if not self.flagged_only or (
+                                self.in_range(yes_price, no_price) and self.in_search(contract['shortName'])):
                             if self.flagged_only and not header_printed:
                                 print(header)
                                 header_printed = True
@@ -49,19 +57,20 @@ class PredictIt:
     def show_all_markets(self):
         all_markets = pi.get(pi.all_endpoint)
         pi.display(all_markets['markets'])
-        print('\nAll data sourced from http://www.PredictIt.org/ and is for non-commercial use.')
+        print('\nAll data sourced from http://www.PredictIt.org/    and is for non-commercial use.')
 
     def print_help(self):
-        print('main.py -h --low=[price] --high=[price] --u,url')
+        print('predictit.py -h --low=[price] --high=[price] --key=[keyword] --u,url')
         print('    -h help')
         print('    --low=[price] where price in range of 0.00 - 1.00 (optional)')
         print('    --high=[price] where price in range of 0.00 - 1.00 (optional)')
+        print('    -k, --key, --keyword=[keyword] Keyword to search for in contracts (not markets [yet])')
         print('    -f --flagged  Only show flagged rows')
         print('    -u, --url Show market URL')
 
     def get_params(self, argv):
         try:
-            opts, args = getopt.getopt(argv, 'hfu', ['low=', 'high=', 'flagged', 'url', 'urls'])
+            opts, args = getopt.getopt(argv, 'hfuk:', ['key=', 'keyword=', 'low=', 'high=', 'flagged', 'url', 'urls'])
         except getopt.GetoptError:
             self.print_help()
             sys.exit(2)
@@ -93,6 +102,9 @@ class PredictIt:
                 self.flagged_only = True
             elif opt in ('-u', '--url', '--urls'):
                 self.show_url = True
+            elif opt in ('-k', '--key', '--keyword'):
+                self.keyword = arg.lower()
+                self.flagged_only = True
 
         if flag_low or flag_high:
             if (flag_low and not flag_high) or (flag_high and not flag_low):
