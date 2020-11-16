@@ -9,6 +9,9 @@ python predictit.py -h --low=[price] --high=[price] --key=[keyword] --u,url
     -k [keyword], --key=[keyword], --keyword=[keyword] Keyword to search for in contracts
     -f --flagged  Only show flagged rows
     -u, --url Show market URL
+    -m, --monitor Monitor for new markets
+    -i, --id id to monitor
+    -p [mins], --period=[mins] Period of time between monitoring cycles
     --help help
 ```
 
@@ -45,6 +48,19 @@ Output the PredictIt.org URL for the given market
 ```bash
 python predictit.py --low .8 --high .9 --url
 ```
+Monitor for newly added markets
+```bash
+--monitor
+```
+... every [xxx] minutes
+```bash
+--monitor -period 60
+```
+Monitor single market for updated contract values
+```bash
+--monitor --id=6976
+```
+
 
 
 ## Requirements
@@ -58,10 +74,12 @@ You may need to install the following packages to your virtual environment:
   * ~~Combined with range searching~~
 * ~~Keyword searching for markets~~
   * ~~Combined with range searching~~
-* Monitor specific market/contracts over time
-  * Alert for price change
-  * Integrate with SMS capabilities 
-* Monitor for new markets coming online
+* ~~Monitor specific market/contracts over time~~
+  * ~~Alert for price change~~
+  * BUG: Only compare values we care about, not entire market record
+  * Integrate with SMS/Email capabilities 
+* ~~Monitor for new markets coming online~~
+  * Integrate with SMS/Email capabilities
 * Better user interface, i.e. non-command-line, potentially interactive
 
 ## Notes
