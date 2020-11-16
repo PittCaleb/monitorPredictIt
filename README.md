@@ -41,6 +41,7 @@ Will optionally output the PredictIt.org URL for the shown market
 * Monitor specific market/contracts over time
   * Alert for price change
   * Integrate with SMS capabilities 
+* Monitor for new markets coming online
 * Better user interface, i.e. non-command-line, potentially interactive
 
 ## Notes
