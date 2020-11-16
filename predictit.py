@@ -91,8 +91,8 @@ class PredictIt:
 
     def in_range(self, yes_price, no_price):
         return True if (self.flag_range is None or (self.flag_range is not None and (
-                (self.flag_range[0] <= yes_price <= self.flag_range[1]) or (
-                self.flag_range[0] <= no_price <= self.flag_range[1])))) else False
+                    (self.flag_range[0] <= yes_price <= self.flag_range[1]) or (
+                        self.flag_range[0] <= no_price <= self.flag_range[1])))) else False
 
     def in_search(self, phrase):
         return True if self.keyword is None or (self.keyword and self.keyword in phrase.lower()) else False
@@ -112,7 +112,8 @@ class PredictIt:
                         yes_price = contract['bestBuyYesCost'] if contract['bestBuyYesCost'] else float(0)
                         no_price = contract['bestBuyNoCost'] if contract['bestBuyNoCost'] else float(0)
                         if not self.flagged_only or (
-                                self.in_range(yes_price, no_price) and self.in_search(contract['shortName'])):
+                                self.in_range(yes_price, no_price) and self.in_search(contract['shortName'])) or (
+                                self.in_range(yes_price, no_price) and self.in_search(market['shortName'])):
                             if self.flagged_only and not header_printed:
                                 print(header)
                                 header_printed = True
