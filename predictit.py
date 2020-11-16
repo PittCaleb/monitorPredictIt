@@ -4,14 +4,80 @@ import sys
 import getopt
 
 
+class Setup:
+    def __init__(self, argv):
+        self.app_name = argv[0]
+        self.args = argv[1:]
+        self.predict_it = PredictIt()
+        self.short_opts = 'fuk:l:h:'
+        self.long_opts = ['key=', 'keyword=', 'low=', 'high=', 'flagged', 'url', 'urls', 'help']
+
+    def print_help(self):
+        print(f'python {self.app_name} -h --low=[price] --high=[price] --key=[keyword] --u,url')
+        print('    -l [price[, --low=[price] where price in range of 0.00 - 1.00 (optional)')
+        print('    -h [price], --high=[price] where price in range of 0.00 - 1.00 (optional)')
+        print('    -k [keyword], --key=[keyword], --keyword=[keyword] Keyword to search for in contracts')
+        print('    -f --flagged  Only show flagged rows')
+        print('    -u, --url Show market URL')
+        print('    --help help')
+
+    def get_params(self):
+        try:
+            opts, args = getopt.getopt(self.args, self.short_opts, self.long_opts)
+        except getopt.GetoptError:
+            self.print_help()
+            sys.exit(2)
+
+        flag_low = None
+        flag_high = None
+
+        for opt, arg in opts:
+            if opt == '--help':
+                self.print_help()
+                sys.exit()
+            elif opt in ['-l', '--low']:
+                try:
+                    flag_low = float(arg)
+                    if not 0 <= flag_low <= 1:
+                        raise ValueError
+                except ValueError:
+                    self.print_help()
+                    sys.exit(2)
+            elif opt in ['-h', '--high']:
+                try:
+                    flag_high = float(arg)
+                    if not 0 <= flag_high <= 1:
+                        raise ValueError
+                except ValueError:
+                    self.print_help()
+                    sys.exit(2)
+            elif opt in ('-f', '--flagged'):
+                self.predict_it.flagged_only = True
+            elif opt in ('-u', '--url', '--urls'):
+                self.predict_it.show_url = True
+            elif opt in ('-k', '--key', '--keyword'):
+                self.predict_it.keyword = arg.lower()
+                self.predict_it.flagged_only = True
+
+        if flag_low or flag_high:
+            if (flag_low and not flag_high) or (flag_high and not flag_low):
+                print('Must set both LOW and HIGH flag values if setting one')
+                self.print_help()
+                sys.exit(2)
+            self.predict_it.flag_range = [flag_low, flag_high]
+
+        return self.predict_it
+
+
 class PredictIt:
     def __init__(self):
         self.base_url = 'https://www.predictit.org/api'
         self.all_endpoint = 'marketdata/all/'
-        self.invid_endpoint = 'markets/'
+        self.indiv_endpoint = 'markets/'
+        self.flag = '*****'
+
         self.flag_range = None
         self.flagged_only = False
-        self.flag = '*****'
         self.show_url = False
         self.keyword = None
 
@@ -55,65 +121,10 @@ class PredictIt:
                                 f"{' ':6}{contract['shortName']:40}  Yes: {yes_price:5.2f} No: {no_price:5.2f} {flag}")
 
     def show_all_markets(self):
-        all_markets = pi.get(pi.all_endpoint)
-        pi.display(all_markets['markets'])
+        all_markets = self.get(self.all_endpoint)
+        self.display(all_markets['markets'])
         print('\nAll data sourced from http://www.PredictIt.org/    and is for non-commercial use.')
 
-    def print_help(self):
-        print('predictit.py -h --low=[price] --high=[price] --key=[keyword] --u,url')
-        print('    -h help')
-        print('    --low=[price] where price in range of 0.00 - 1.00 (optional)')
-        print('    --high=[price] where price in range of 0.00 - 1.00 (optional)')
-        print('    -k, --key, --keyword=[keyword] Keyword to search for in contracts (not markets [yet])')
-        print('    -f --flagged  Only show flagged rows')
-        print('    -u, --url Show market URL')
 
-    def get_params(self, argv):
-        try:
-            opts, args = getopt.getopt(argv, 'hfuk:', ['key=', 'keyword=', 'low=', 'high=', 'flagged', 'url', 'urls'])
-        except getopt.GetoptError:
-            self.print_help()
-            sys.exit(2)
-
-        flag_low = None
-        flag_high = None
-
-        for opt, arg in opts:
-            if opt == '-h':
-                self.print_help()
-                sys.exit()
-            elif opt == '--low':
-                try:
-                    flag_low = float(arg)
-                    if not 0 <= flag_low <= 1:
-                        raise ValueError
-                except ValueError:
-                    self.print_help()
-                    sys.exit(2)
-            elif opt == '--high':
-                try:
-                    flag_high = float(arg)
-                    if not 0 <= flag_high <= 1:
-                        raise ValueError
-                except ValueError:
-                    self.print_help()
-                    sys.exit(2)
-            elif opt in ('-f', '--flagged'):
-                self.flagged_only = True
-            elif opt in ('-u', '--url', '--urls'):
-                self.show_url = True
-            elif opt in ('-k', '--key', '--keyword'):
-                self.keyword = arg.lower()
-                self.flagged_only = True
-
-        if flag_low or flag_high:
-            if (flag_low and not flag_high) or (flag_high and not flag_low):
-                print('Must set both LOW and HIGH flag values if setting one')
-                self.print_help()
-                sys.exit(2)
-            self.flag_range = [flag_low, flag_high]
-
-
-pi = PredictIt()
-pi.get_params(sys.argv[1:])
-pi.show_all_markets()
+predict_it = Setup(sys.argv).get_params()
+predict_it.show_all_markets()
