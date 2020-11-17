@@ -11,8 +11,12 @@ python predictit.py -h --low=[price] --high=[price] --key=[keyword] --u,url
     -u, --url Show market URL
     -m, --monitor Monitor for new markets
     -i, --id id to monitor
-    -p [mins], --period=[mins] Period of time between monitoring cycles
+    -p [mins], --period=[mins] Period of time between monitoring cycles (default=30)
+    -s=[key], --sms-key=[key]  SMS API Key
+    -n=[number], --number=[number]  US 10-digit phone number to send SMS message to for --monitor alerts
     --help help
+        SMS will send on --monitor usage with --SMS-KEY or env D7_API_KEY is set
+        SMS will send to --number or env SMS_RECIPIENT is set
 ```
 
 ## Examples
@@ -60,7 +64,19 @@ Monitor single market for updated contract values
 ```bash
 --monitor --id=6976
 ```
+Monitor and send SMS with key and phone number
+```bash
+--monitor --sms-key=[my key here] --number=[your 10-digit phone num]
+```
 
+## SMS Messaging
+You must obtain an API Key from [Direct 7 Networks](https://d7networks.com/).
+
+Inject that API key into the applet either as a command line argument or system ENVironment variable.
+
+You must also provide a recipient phone number either by --number or also system ENVironment definition.
+
+Only US-based phone numbers have been tested and they must be in the format of 19085551212. the --number argument accecpts only a 10-digit number and prepends the 1. The ENV is unchecked and must be a proper internatlized version of an American phone number.
 
 
 ## Requirements
@@ -87,6 +103,7 @@ This is a work in progress.  It was done merely as an academic exercise to have 
 PredictIt.org is not meant to be a gambling / money making site
 
 If you have any ideas for new features, pls let me know, would be open to integrating
+
 
 ## Contact
 Caleb Cohen  

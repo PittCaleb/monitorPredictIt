@@ -7,6 +7,7 @@ from time import sleep
 from datetime import datetime
 
 from setup import Setup
+from sms import SMS
 
 
 class PredictIt:
@@ -15,6 +16,8 @@ class PredictIt:
         self.all_endpoint = 'all/'
         self.indiv_endpoint = 'markets/'
         self.flag = '*****'
+
+        self.sms_api_key = None
 
         self.flag_range = None
         self.flagged_only = False
@@ -25,6 +28,7 @@ class PredictIt:
         self.monitor = False
         self.monitor_market = None
         self.period = 30 * 60
+        self.alert_sms_number = None
 
     def get(self, endpoint):
         url = f'{self.base_url}/{endpoint}'
@@ -82,11 +86,21 @@ class PredictIt:
         markets = self.get(self.all_endpoint)
         return [market['id'] for market in markets['markets']]
 
+    def contracts_different(self, last, current):
+        # ToDo: Compare only contract values, not extranous information, such as date
+        # ToDo: Major issue, monitoring a market does not work until this is done!
+        if last != current:
+            return True
+
+        return False
+
     def compare_market_data(self, last, current):
         now = datetime.now().strftime("%I:%M:%S")
-        if last != current:
+        if self.contracts_different(last, current):
             if last:
                 print(f'\n{self.flag} Change in contracts found at {now} {self.flag}\n')
+                SMS(predict_it.sms_api_key).sendSMS(predict_it.alert_sms_number,
+                                                    f"PredictIt Contract change found for {current['shortName']}")
             else:
                 print(f'\nInitial contracts found at {now} {self.flag}\n')
 
@@ -104,6 +118,8 @@ class PredictIt:
             print(f'\n{self.flag} New market{plural} found at {now} {self.flag}\n')
             for market_id in new_markets:
                 market_data = self.get_single_market(market_id)
+                SMS(predict_it.sms_api_key).sendSMS(predict_it.alert_sms_number,
+                                                    f"New PredictIt Market found: {market_data['shortName']}")
                 self.display_single_market(market_data)
         else:
             print(f'{now} No new markets found')

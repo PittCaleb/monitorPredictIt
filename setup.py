@@ -6,12 +6,12 @@ class Setup:
     def __init__(self, argv):
         self.app_name = argv[0]
         self.args = argv[1:]
-        self.short_opts = 'mfuk:l:h:p:i:'
-        self.long_opts = ['id=', 'period=', 'monitor', 'key=', 'keyword=', 'low=', 'high=', 'flagged', 'url', 'urls', 'help']
+        self.short_opts = 'mfuk:l:h:p:i:s:n:'
+        self.long_opts = ['number=', 'sms_key=', 'id=', 'period=', 'monitor', 'key=', 'keyword=', 'low=', 'high=', 'flagged', 'url', 'urls', 'help']
 
     def print_help(self, e=None):
         if e:
-            print(f'\n{e}\n\n')
+            print(f'\n{e}\n')
         print(f'python {self.app_name} --help --monitor --low=[price] --high=[price] --key=[keyword] --u,url')
         print('    -l [price[, --low=[price] where price in range of 0.00 - 1.00 (optional)')
         print('    -h [price], --high=[price] where price in range of 0.00 - 1.00 (optional)')
@@ -21,7 +21,10 @@ class Setup:
         print('    -m, --monitor Monitor for new markets')
         print('    -i, --id id to monitor')
         print('    -p [mins], --period=[mins] Period of time between monitoring cycles')
+        print('    -s=[key], --sms-key=[key]  SMS API Key')
+        print('    -n=[number], --number=[number]  US 10-digit phone number to send SMS message to for --monitor alerts')
         print('    --help help')
+        print('\nSMS will send on --monitor usage if set by argument or env D7_API_KEY is set')
 
         sys.exit()
 
@@ -67,6 +70,15 @@ class Setup:
                     predict_it.period = int(arg) * 60
                 except ValueError:
                     self.print_help(e='Period must be an integer')
+            elif opt in ('-s', '--sms-key'):
+                predict_it.sms_api_key = arg
+            elif opt in ('-n', '--number'):
+                if len(arg) != 10:
+                    self.print_help(e=f'number must be exactly 10 digits in length. Received |{arg}|.')
+                try:
+                    predict_it.alert_sms_number = int(f'1{arg}')
+                except ValueError:
+                    self.print_help(e=f'Number must be entirely numeric. Received |{arg}|')
 
         if flag_low or flag_high:
             if (flag_low and not flag_high) or (flag_high and not flag_low):
