@@ -92,10 +92,10 @@ You may need to install the following packages to your virtual environment:
   * ~~Combined with range searching~~
 * ~~Monitor specific market/contracts over time~~
   * ~~Alert for price change~~
-  * BUG: Only compare values we care about, not entire market record
-  * Integrate with SMS/Email capabilities 
+  * ~~Only compare values we care about, not entire market record~~
+  * ~~Integrate with SMS/Email capabilities~~
 * ~~Monitor for new markets coming online~~
-  * Integrate with SMS/Email capabilities
+  * ~~Integrate with SMS/Email capabilities~~
 * Better user interface, i.e. non-command-line, potentially interactive
 
 ## Notes
