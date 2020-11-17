@@ -63,13 +63,14 @@ class Setup:
                 predict_it.flagged_only = True
             elif opt in ('-m', '--monitor'):
                 predict_it.monitor = True
+                predict_it.show_url = True
             elif opt in ('-i', '--id'):
                 predict_it.monitor_market = arg
             elif opt in ('-p', '--period'):
                 try:
                     predict_it.period = int(arg) * 60
                 except ValueError:
-                    self.print_help(e='Period must be an integer')
+                    self.print_help(e='Period must be a valid number')
             elif opt in ('-s', '--sms-key'):
                 predict_it.sms_api_key = arg
             elif opt in ('-n', '--number'):

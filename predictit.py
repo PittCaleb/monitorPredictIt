@@ -16,6 +16,7 @@ class PredictIt:
         self.all_endpoint = 'all/'
         self.indiv_endpoint = 'markets/'
         self.flag = '*****'
+        self.marker = 'CHANGED'
 
         self.sms_api_key = None
 
@@ -46,7 +47,7 @@ class PredictIt:
     def in_search(self, phrase):
         return True if self.keyword is None or (self.keyword and self.keyword in phrase.lower()) else False
 
-    def display_single_market(self, market):
+    def display_single_market(self, market, callout=None):
         if market['status'] == 'Open':
             url = f"\n{' ':6}{market['url']}" if self.show_url else ''
             header = f"{market['shortName']:70} ({market['id']}){url}"
@@ -65,9 +66,11 @@ class PredictIt:
                         if self.flagged_only and not header_printed:
                             print(header)
                             header_printed = True
-                        flag = self.flag if not self.flagged_only and self.in_range(yes_price, no_price) else ''
+                        flag = self.flag if not self.monitor and not self.flagged_only and (
+                                self.flag_range and self.in_range(yes_price, no_price)) else ''
+                        marker = self.marker if callout == contract['id'] else flag
                         print(
-                            f"{' ':6}{contract['shortName']:40}  Yes: {yes_price:5.2f} No: {no_price:5.2f} {flag}")
+                            f"{' ':6}{contract['shortName']:40} Yes: {yes_price:5.2f} No: {no_price:5.2f} {marker}")
 
     def display(self, markets):
         for market in markets:
@@ -76,7 +79,7 @@ class PredictIt:
     def show_all_markets(self):
         all_markets = self.get(self.all_endpoint)
         self.display(all_markets['markets'])
-        print('\nAll data sourced from http://www.PredictIt.org/    and is for non-commercial use.')
+        print('\nAll data sourced from http://www.PredictIt.org/ and is for non-commercial use.')
 
     def get_single_market(self, market_id):
         market = self.get(f'{self.indiv_endpoint}{market_id}')
@@ -87,24 +90,32 @@ class PredictIt:
         return [market['id'] for market in markets['markets']]
 
     def contracts_different(self, last, current):
-        # ToDo: Compare only contract values, not extranous information, such as date
-        # ToDo: Major issue, monitoring a market does not work until this is done!
         if last != current:
-            return True
+            if not last:
+                return True
+
+            for prev_contract in last['contracts']:
+                current_contract = [c for c in current['contracts'] if c['id'] == prev_contract['id']]
+
+                if not (current_contract and
+                        current_contract[0]['bestBuyYesCost'] == prev_contract['bestBuyYesCost'] and
+                        current_contract[0]['bestBuyNoCost'] == prev_contract['bestBuyNoCost']):
+                    print('Different ', current_contract[0]['id'])
+                    return current_contract[0]['id']
 
         return False
 
     def compare_market_data(self, last, current):
         now = datetime.now().strftime("%I:%M:%S")
-        if self.contracts_different(last, current):
+        if changed_id := self.contracts_different(last, current):
             if last:
                 print(f'\n{self.flag} Change in contracts found at {now} {self.flag}\n')
                 SMS(predict_it.sms_api_key).sendSMS(predict_it.alert_sms_number,
-                                                    f"PredictIt Contract change found for {current['shortName']}")
+                                                    f"PredictIt Contract change found for {current['shortName']}\n{current['url']}")
             else:
                 print(f'\nInitial contracts found at {now} {self.flag}\n')
 
-            self.display_single_market(current)
+            self.display_single_market(current, callout=changed_id)
         else:
             print(f'{now} Contract data unchanged for market')
 
@@ -119,7 +130,7 @@ class PredictIt:
             for market_id in new_markets:
                 market_data = self.get_single_market(market_id)
                 SMS(predict_it.sms_api_key).sendSMS(predict_it.alert_sms_number,
-                                                    f"New PredictIt Market found: {market_data['shortName']}")
+                                                    f"New PredictIt Market found: {market_data['shortName']}\n{market_data['url']}")
                 self.display_single_market(market_data)
         else:
             print(f'{now} No new markets found')
